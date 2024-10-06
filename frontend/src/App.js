@@ -29,9 +29,11 @@ function App() {
   const [stockData, setStockData] = useState([]);
   const [predictions, setPredictions] = useState([]);
   const [symbol, setSymbol] = useState('AAPL');  // Default to AAPL (Apple)
+  const [period, setPeriod] = useState('1mo');  // Default to 1 month
 
-  const fetchStockData = (ticker) => {
-    axios.get(`http://localhost:5000/api/stocks?symbol=${ticker}`)
+  // Fetch stock data based on the selected symbol and period
+  const fetchStockData = (ticker, selectedPeriod) => {
+    axios.get(`http://localhost:5000/api/stocks?symbol=${ticker}&period=${selectedPeriod}`)
       .then(response => {
         setStockData(response.data);
         console.log("Fetched stock data:", response.data);
@@ -42,7 +44,7 @@ function App() {
   };
 
   useEffect(() => {
-    fetchStockData(symbol);  // Fetch stock data for the default or input symbol
+    fetchStockData(symbol, period);  // Fetch stock data for the default or input symbol and period
 
     socket.on('stock_update', data => {
       setStockData(data);
@@ -53,7 +55,7 @@ function App() {
       setPredictions(data);
       console.log("Real-time predictions:", data);
     });
-  }, [symbol]);
+  }, [symbol, period]);
 
   // Helper function to generate future dates (using native JS)
   const generateFutureDates = (startDate, numDays) => {
@@ -72,7 +74,9 @@ function App() {
 
   // Prepare labels and data for chart
   const historicalLabels = stockData.map(item => item.Date ? item.Date.split(' ')[0] : '');
-  const allLabels = [...historicalLabels, ...futureDates];  // Combine historical and future labels
+  
+  // Combine historical and future labels
+  const allLabels = [...historicalLabels, ...futureDates];
 
   const data = {
     labels: allLabels,  // Use combined labels
@@ -100,7 +104,7 @@ function App() {
           text: 'Date',
         },
         ticks: {
-          autoSkip: false,
+          autoSkip: true,  // Auto-skip labels to avoid clutter
           maxRotation: 45,
           minRotation: 0,
         },
@@ -134,7 +138,14 @@ function App() {
         value={symbol}
         onChange={e => setSymbol(e.target.value.toUpperCase())}
       />
-      <button onClick={() => fetchStockData(symbol)}>Search</button>
+      
+      {/* Dropdown menu for selecting time period */}
+      <select value={period} onChange={e => setPeriod(e.target.value)}>
+        <option value="1mo">1 Month</option>
+        <option value="6mo">6 Months</option>
+      </select>
+
+      <button onClick={() => fetchStockData(symbol, period)}>Search</button>
       
       <div style={{ height: "500px" }}>
         <Line data={data} options={options} />

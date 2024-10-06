@@ -11,14 +11,19 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000")
 
-# Fetch stock data for the specified symbol
-def get_stock_data(symbol='AAPL'):
+# Fetch stock data for the specified symbol and period
+def get_stock_data(symbol='AAPL', period='1mo'):
     stock = yf.Ticker(symbol)
-    hist = stock.history(period="1mo")  # Get 1 month of data
+    hist = stock.history(period=period)  # Fetch data based on the provided period (1mo, 6mo, etc.)
+    
+    # Handling missing data (if any)
+    hist = hist[['Close']].fillna(method='ffill')  # Use forward fill for missing values
+    
     hist.reset_index(inplace=True)
-    hist['Date'] = hist['Date'].astype(str)  # Convert Pandas Timestamp to string
+    hist['Date'] = hist['Date'].astype(str)  # Convert Pandas Timestamp to string for easier processing
     stock_data = hist[['Date', 'Close']].rename(columns={'Close': 'price'})
-    print(f"Fetched stock data for {symbol}:", stock_data)  # Log fetched stock data
+    
+    print(f"Fetched stock data for {symbol} with period {period}:", stock_data)  # Log fetched stock data
     return stock_data
 
 # Predict stock prices for future dates
@@ -36,11 +41,12 @@ def predict_stock_trend(data):
     print("Predicted data:", result)  # Log predicted data
     return result
 
-# API endpoint to serve stock data based on a query parameter
+# API endpoint to serve stock data based on symbol and period query parameters
 @app.route('/api/stocks', methods=['GET'])
 def stocks():
     symbol = request.args.get('symbol', 'AAPL')  # Default to AAPL if no symbol is provided
-    stock_data = get_stock_data(symbol)
+    period = request.args.get('period', '1mo')  # Default to 1 month if no period is provided
+    stock_data = get_stock_data(symbol, period)
     stock_data_json = stock_data.to_dict(orient='records')
     return jsonify(stock_data_json)
 
