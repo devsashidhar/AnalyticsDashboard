@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import './App.css';  // Importing custom CSS for styling
 
 ChartJS.register(
   CategoryScale,
@@ -83,15 +84,19 @@ function App() {
     datasets: [
       {
         label: 'Stock Price',
-        data: stockData.map(item => item.price),  // Historical data points
-        borderColor: 'rgba(75,192,192,1)',
-        fill: false,
+        data: stockData.map(item => item.price),
+        borderColor: '#4CAF50',  // Green for the stock price line
+        backgroundColor: 'rgba(76, 175, 80, 0.2)',  // Transparent green fill below the line
+        pointBackgroundColor: '#4CAF50',
+        fill: true,  // Fill the area under the line
       },
       {
         label: 'Predicted Price',
-        data: [...new Array(stockData.length).fill(null), ...predictions.map(item => item.predicted_price)],  // Null for past dates, actual data for future
-        borderColor: 'rgba(255,99,132,1)',
-        fill: false,
+        data: [...new Array(stockData.length).fill(null), ...predictions.map(item => item.predicted_price)],
+        borderColor: '#FF5722',  // Orange for the predicted price line
+        backgroundColor: 'rgba(255, 87, 34, 0.2)',  // Transparent orange fill below the line
+        pointBackgroundColor: '#FF5722',
+        fill: true,
       },
     ],
   };
@@ -102,9 +107,16 @@ function App() {
         title: {
           display: true,
           text: 'Date',
+          color: '#6C757D',  // Gray color for the label
+          font: {
+            family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+            size: 16,
+            weight: 'bold',
+          },
         },
         ticks: {
-          autoSkip: true,  // Auto-skip labels to avoid clutter
+          color: '#495057',  // Gray ticks
+          autoSkip: true,
           maxRotation: 45,
           minRotation: 0,
         },
@@ -113,20 +125,32 @@ function App() {
         title: {
           display: true,
           text: 'Price (USD)',
+          color: '#6C757D',
+          font: {
+            family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+            size: 16,
+            weight: 'bold',
+          },
         },
         ticks: {
+          color: '#495057',
           beginAtZero: false,
         },
       },
     },
     plugins: {
       legend: {
-        display: true,
-        position: 'top',
+        labels: {
+          font: {
+            family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+            size: 14,
+          },
+          color: '#333',  // Gray legend labels
+        },
       },
     },
     responsive: true,
-    maintainAspectRatio: false,
+    maintainAspectRatio: false,  // Disable aspect ratio to let the chart fill the height
   };
 
   return (
@@ -146,8 +170,8 @@ function App() {
       </select>
 
       <button onClick={() => fetchStockData(symbol, period)}>Search</button>
-      
-      <div style={{ height: "500px" }}>
+
+      <div className="chart-container">
         <Line data={data} options={options} />
       </div>
     </div>
